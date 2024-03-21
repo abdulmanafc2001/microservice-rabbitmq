@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"strconv"
+	"user-management/pkg/helper"
 	"user-management/pkg/models"
 
 	"gorm.io/gorm"
@@ -27,7 +28,16 @@ func NewRepositories(db *gorm.DB) Repositories {
 }
 
 func (re *Repository) CreateUser(usr models.User) (models.User, error) {
+	pass, err := helper.HashPassword(usr.Password)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	usr.Password = pass
+
 	res := re.DB.Create(&usr)
+
 	if res.Error != nil {
 		return models.User{}, res.Error
 	}
@@ -77,7 +87,7 @@ func (re *Repository) UpdateUserById(id int, usr models.User) error {
 		"email":        usr.Email,
 		"phone_number": usr.Phone_Number,
 	}
-	res := re.DB.Model(&models.User{}).Where("id = ?", id).Updates(data)
+	res := re.DB.Model(&models.User{}).Where("user_id = ?", id).Updates(data)
 	if res.Error != nil {
 		return res.Error
 	}
